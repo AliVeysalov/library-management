@@ -45,6 +45,7 @@ public class SecurityConfig {
             auth.requestMatchers("/api/auth/**").permitAll();
             auth.requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html").permitAll();
             auth.requestMatchers("/h2-console/**").permitAll();
+            auth.requestMatchers("/", "/index.html", "/*.html", "/*.css", "/*.js").permitAll();
             auth.requestMatchers(HttpMethod.GET, "/api/books/**").permitAll();
             auth.requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll();
             auth.requestMatchers(HttpMethod.POST, "/api/books/**").hasAnyRole("ADMIN", "LIBRARIAN");
