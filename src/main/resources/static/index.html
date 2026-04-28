@@ -3,310 +3,703 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Library Management System</title>
+    <title>Kitabxana İdarəetmə Sistemi</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f5f5f5; color: #333; }
-
-        /* Navbar */
-        .navbar {
-            background: #2c3e50;
-            color: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        :root {
+            --primary: #1a3c5e;
+            --primary-light: #2563a8;
+            --primary-lighter: #dbeafe;
+            --accent: #c8a84b;
+            --accent-light: #fef3c7;
+            --success: #16a34a;
+            --success-light: #dcfce7;
+            --danger: #dc2626;
+            --danger-light: #fee2e2;
+            --warning: #d97706;
+            --warning-light: #fef3c7;
+            --sidebar-bg: #0f2744;
+            --sidebar-hover: rgba(255,255,255,0.08);
+            --sidebar-active: rgba(200,168,75,0.2);
+            --bg: #f0f4f8;
+            --white: #ffffff;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-400: #94a3b8;
+            --gray-600: #475569;
+            --gray-800: #1e293b;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+            --radius: 10px;
+            --radius-lg: 14px;
         }
-        .navbar h1 { font-size: 20px; }
-        .nav-links { display: flex; gap: 15px; align-items: center; }
-        .nav-links a { color: white; text-decoration: none; font-size: 14px; cursor: pointer; }
-        .nav-links a:hover { color: #3498db; }
-        .user-info { font-size: 13px; color: #bdc3c7; }
+        body { font-family: 'Inter', 'Segoe UI', sans-serif; background: var(--bg); color: var(--gray-800); }
 
-        /* Pages */
-        .page { display: none; padding: 30px; max-width: 1200px; margin: 0 auto; }
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            position: fixed; left: 0; top: 0; bottom: 0; width: 260px;
+            background: var(--sidebar-bg); display: flex; flex-direction: column; z-index: 100;
+        }
+        .sidebar-logo {
+            padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .logo-top { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+        .logo-icon {
+            width: 42px; height: 42px; background: var(--accent);
+            border-radius: 10px; display: flex; align-items: center;
+            justify-content: center; font-size: 20px;
+        }
+        .logo-text h1 { color: white; font-size: 15px; font-weight: 700; }
+        .logo-text span { color: var(--accent); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+        .logo-subtitle { color: rgba(255,255,255,0.4); font-size: 11px; margin-top: 8px; padding-left: 2px; }
+
+        .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+        .nav-group-label {
+            font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.3); padding: 12px 12px 6px; font-weight: 600;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+            color: rgba(255,255,255,0.6); cursor: pointer; border-radius: var(--radius);
+            transition: all 0.2s; font-size: 14px; margin-bottom: 2px; font-weight: 500;
+        }
+        .nav-item:hover { background: var(--sidebar-hover); color: rgba(255,255,255,0.9); }
+        .nav-item.active { background: var(--sidebar-active); color: var(--accent); }
+        .nav-item .nav-icon { font-size: 17px; width: 22px; text-align: center; }
+        .nav-item .nav-badge {
+            margin-left: auto; background: var(--accent); color: var(--sidebar-bg);
+            font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px;
+        }
+
+        .sidebar-footer {
+            padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.08);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .user-avatar {
+            width: 38px; height: 38px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-light), var(--accent));
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 14px; flex-shrink: 0;
+        }
+        .user-details .name { color: white; font-size: 13px; font-weight: 600; }
+        .user-details .role-badge {
+            display: inline-block; background: var(--accent); color: var(--sidebar-bg);
+            font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 10px;
+            text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;
+        }
+
+        /* ===== MAIN ===== */
+        .main { margin-left: 260px; min-height: 100vh; }
+        .topbar {
+            background: white; padding: 0 28px; height: 64px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--gray-200); position: sticky; top: 0; z-index: 50;
+            box-shadow: var(--shadow);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 16px; }
+        .breadcrumb { display: flex; align-items: center; gap: 8px; }
+        .breadcrumb .home { color: var(--gray-400); font-size: 13px; }
+        .breadcrumb .sep { color: var(--gray-400); font-size: 12px; }
+        .breadcrumb .current { color: var(--gray-800); font-size: 14px; font-weight: 600; }
+        .topbar-right { display: flex; align-items: center; gap: 12px; }
+        .topbar-date {
+            background: var(--gray-100); padding: 6px 14px; border-radius: 20px;
+            font-size: 12px; color: var(--gray-600); font-weight: 500;
+        }
+        .logout-btn {
+            background: none; border: 1.5px solid var(--gray-200); color: var(--gray-600);
+            padding: 7px 14px; border-radius: 8px; cursor: pointer; font-size: 13px;
+            font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .logout-btn:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-light); }
+
+        .content { padding: 28px; }
+        .page { display: none; }
         .page.active { display: block; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-title { font-size: 22px; font-weight: 700; color: var(--gray-800); }
+        .page-subtitle { font-size: 13px; color: var(--gray-400); margin-top: 2px; }
 
-        /* Auth Forms */
-        .auth-container {
-            max-width: 400px;
-            margin: 50px auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        /* ===== AUTH ===== */
+        .auth-wrapper {
+            min-height: 100vh; display: flex;
+            background: linear-gradient(135deg, var(--sidebar-bg) 0%, var(--primary-light) 100%);
         }
-        .auth-container h2 { margin-bottom: 20px; color: #2c3e50; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-size: 14px; color: #555; }
+        .auth-left {
+            flex: 1; display: flex; flex-direction: column; justify-content: center;
+            padding: 60px; color: white;
+        }
+        .auth-left .big-icon { font-size: 60px; margin-bottom: 24px; }
+        .auth-left h1 { font-size: 32px; font-weight: 700; margin-bottom: 12px; line-height: 1.3; }
+        .auth-left p { font-size: 15px; color: rgba(255,255,255,0.7); line-height: 1.6; margin-bottom: 32px; }
+        .auth-features { display: flex; flex-direction: column; gap: 14px; }
+        .auth-feature { display: flex; align-items: center; gap: 12px; }
+        .auth-feature .feat-icon {
+            width: 36px; height: 36px; background: rgba(200,168,75,0.2);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px;
+        }
+        .auth-feature span { font-size: 14px; color: rgba(255,255,255,0.8); }
+        .auth-right {
+            width: 480px; background: white; display: flex; align-items: center;
+            justify-content: center; padding: 48px;
+        }
+        .auth-card { width: 100%; }
+        .auth-card .auth-header { margin-bottom: 28px; }
+        .auth-card .auth-header h2 { font-size: 24px; font-weight: 700; color: var(--gray-800); }
+        .auth-card .auth-header p { font-size: 13px; color: var(--gray-400); margin-top: 4px; }
+        .auth-tabs { display: flex; background: var(--gray-100); border-radius: 10px; padding: 4px; margin-bottom: 24px; }
+        .auth-tab {
+            flex: 1; text-align: center; padding: 9px; border-radius: 8px;
+            font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; color: var(--gray-400);
+        }
+        .auth-tab.active { background: white; color: var(--primary); box-shadow: var(--shadow); }
+
+        /* ===== FORMS ===== */
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--gray-600); margin-bottom: 6px; }
+        .input-wrap { position: relative; }
+        .input-wrap .input-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--gray-400); }
         .form-group input, .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
+            width: 100%; padding: 11px 14px 11px 38px;
+            border: 1.5px solid var(--gray-200); border-radius: 9px;
+            font-size: 14px; color: var(--gray-800); transition: all 0.2s;
+            background: white; font-family: inherit;
         }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(37,99,168,0.1); }
+        .form-group input.no-icon, .form-group select.no-icon { padding-left: 14px; }
+
+        /* ===== BUTTONS ===== */
         .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
+            padding: 10px 20px; border: none; border-radius: 9px; cursor: pointer;
+            font-size: 14px; font-weight: 600; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 7px; font-family: inherit;
         }
-        .btn-primary { background: #3498db; color: white; width: 100%; }
-        .btn-primary:hover { background: #2980b9; }
-        .btn-success { background: #27ae60; color: white; }
-        .btn-success:hover { background: #229954; }
-        .btn-danger { background: #e74c3c; color: white; }
-        .btn-danger:hover { background: #c0392b; }
-        .btn-warning { background: #f39c12; color: white; }
-        .auth-toggle { text-align: center; margin-top: 15px; font-size: 13px; }
-        .auth-toggle span { color: #3498db; cursor: pointer; }
+        .btn-primary { background: var(--primary); color: white; width: 100%; justify-content: center; padding: 13px; font-size: 15px; }
+        .btn-primary:hover { background: var(--primary-light); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,60,94,0.3); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #15803d; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-accent { background: var(--accent); color: var(--sidebar-bg); }
+        .btn-accent:hover { background: #b8973a; }
+        .btn-outline { background: white; border: 1.5px solid var(--gray-200); color: var(--gray-600); }
+        .btn-outline:hover { border-color: var(--primary-light); color: var(--primary-light); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 7px; }
+        .btn-lg { padding: 14px 28px; font-size: 15px; }
+        .auth-toggle { text-align: center; margin-top: 16px; font-size: 13px; color: var(--gray-400); }
+        .auth-toggle span { color: var(--primary-light); cursor: pointer; font-weight: 600; }
 
-        /* Cards Grid */
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+        /* ===== STATS ===== */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card {
+            background: white; border-radius: var(--radius-lg); padding: 22px 20px;
+            box-shadow: var(--shadow); display: flex; align-items: center; gap: 16px;
+            border-left: 4px solid transparent; transition: all 0.2s;
         }
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .stat-card.blue { border-left-color: var(--primary-light); }
+        .stat-card.green { border-left-color: var(--success); }
+        .stat-card.yellow { border-left-color: var(--accent); }
+        .stat-card.red { border-left-color: var(--danger); }
+        .stat-icon-wrap {
+            width: 50px; height: 50px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 22px;
         }
-        .card h3 { color: #2c3e50; margin-bottom: 8px; font-size: 16px; }
-        .card p { font-size: 13px; color: #666; margin-bottom: 5px; }
-        .card .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-        .badge-success { background: #d5f5e3; color: #1e8449; }
-        .badge-danger { background: #fadbd8; color: #922b21; }
-        .badge-warning { background: #fef9e7; color: #9a7d0a; }
-        .card .card-actions { margin-top: 15px; display: flex; gap: 8px; }
+        .stat-icon-wrap.blue { background: var(--primary-lighter); }
+        .stat-icon-wrap.green { background: var(--success-light); }
+        .stat-icon-wrap.yellow { background: var(--accent-light); }
+        .stat-icon-wrap.red { background: var(--danger-light); }
+        .stat-info .number { font-size: 28px; font-weight: 700; color: var(--gray-800); line-height: 1; }
+        .stat-info .label { font-size: 12px; color: var(--gray-400); margin-top: 4px; font-weight: 500; }
+        .stat-info .trend { font-size: 11px; color: var(--success); margin-top: 2px; }
 
-        /* Page Header */
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+        /* ===== BOOKS ===== */
+        .books-toolbar { display: flex; gap: 12px; margin-bottom: 20px; align-items: center; }
+        .search-wrap { flex: 1; position: relative; }
+        .search-wrap input {
+            width: 100%; padding: 11px 16px 11px 42px;
+            border: 1.5px solid var(--gray-200); border-radius: 10px;
+            font-size: 14px; background: white; transition: all 0.2s; font-family: inherit;
         }
-        .page-header h2 { color: #2c3e50; }
+        .search-wrap input:focus { outline: none; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(37,99,168,0.1); }
+        .search-wrap .s-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-400); font-size: 15px; }
 
-        /* Search Bar */
-        .search-bar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+        .books-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 18px; }
+        .book-card {
+            background: white; border-radius: var(--radius-lg); overflow: hidden;
+            box-shadow: var(--shadow); transition: all 0.25s; cursor: default;
         }
-        .search-bar input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
+        .book-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+        .book-cover-area {
+            height: 130px; display: flex; align-items: center; justify-content: center;
+            position: relative; font-size: 48px;
         }
+        .book-cover-area.col1 { background: linear-gradient(135deg, #1a3c5e, #2563a8); }
+        .book-cover-area.col2 { background: linear-gradient(135deg, #065f46, #16a34a); }
+        .book-cover-area.col3 { background: linear-gradient(135deg, #7c2d12, #dc2626); }
+        .book-cover-area.col4 { background: linear-gradient(135deg, #4c1d95, #7c3aed); }
+        .book-cover-area.col5 { background: linear-gradient(135deg, #713f12, #d97706); }
+        .book-cover-area .stock-overlay {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(0,0,0,0.4); color: white;
+            font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 600;
+        }
+        .book-body { padding: 16px; }
+        .book-body h3 { font-size: 14px; font-weight: 700; color: var(--gray-800); margin-bottom: 5px; line-height: 1.4; }
+        .book-body .author { font-size: 12px; color: var(--gray-400); margin-bottom: 4px; }
+        .book-body .isbn { font-size: 11px; color: var(--gray-400); font-family: monospace; }
+        .book-footer-bar {
+            padding: 12px 16px; border-top: 1px solid var(--gray-100);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .avail-badge {
+            font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px;
+        }
+        .avail-ok { background: var(--success-light); color: #166534; }
+        .avail-no { background: var(--danger-light); color: #991b1b; }
 
-        /* Modal */
+        /* ===== TABLE ===== */
+        .table-card { background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; }
+        .table-head-bar { padding: 18px 24px; border-bottom: 1px solid var(--gray-100); display: flex; justify-content: space-between; align-items: center; }
+        .table-head-bar h3 { font-size: 15px; font-weight: 700; color: var(--gray-800); }
+        .table-head-bar .count { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+        table { width: 100%; border-collapse: collapse; }
+        thead th {
+            background: var(--gray-100); padding: 12px 20px; text-align: left;
+            font-size: 11px; font-weight: 700; color: var(--gray-600);
+            text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--gray-200);
+        }
+        tbody td { padding: 14px 20px; font-size: 13px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: var(--gray-100); }
+        td .book-name { font-weight: 600; color: var(--gray-800); }
+        td .user-name { color: var(--gray-600); }
+
+        /* ===== BADGES ===== */
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+        .badge-borrowed { background: var(--accent-light); color: #92400e; }
+        .badge-returned { background: var(--success-light); color: #166534; }
+        .badge-overdue { background: var(--danger-light); color: #991b1b; }
+        .badge-admin { background: #ede9fe; color: #5b21b6; }
+        .badge-librarian { background: var(--primary-lighter); color: var(--primary); }
+        .badge-member { background: var(--gray-100); color: var(--gray-600); }
+
+        /* ===== MODAL ===== */
         .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
+            display: none; position: fixed; inset: 0;
+            background: rgba(15,39,68,0.6); z-index: 1000;
+            align-items: center; justify-content: center; backdrop-filter: blur(2px);
         }
         .modal-overlay.active { display: flex; }
         .modal {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            width: 450px;
-            max-width: 90%;
+            background: white; border-radius: var(--radius-lg); padding: 0;
+            width: 500px; max-width: 95%; box-shadow: var(--shadow-lg);
+            animation: modalIn 0.25s ease; overflow: hidden;
         }
-        .modal h3 { margin-bottom: 20px; color: #2c3e50; }
-        .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
-
-        /* Stats */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .modal-header {
+            padding: 20px 24px; border-bottom: 1px solid var(--gray-100);
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--gray-100);
         }
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            text-align: center;
+        .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--gray-800); }
+        .modal-header .close-btn {
+            width: 30px; height: 30px; border-radius: 8px; border: none;
+            background: white; cursor: pointer; font-size: 16px; color: var(--gray-400);
+            display: flex; align-items: center; justify-content: center; transition: all 0.2s;
         }
-        .stat-card .number { font-size: 32px; font-weight: bold; color: #3498db; }
-        .stat-card .label { font-size: 13px; color: #666; margin-top: 5px; }
+        .modal-header .close-btn:hover { background: var(--danger-light); color: var(--danger); }
+        .modal-body { padding: 24px; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid var(--gray-100); display: flex; justify-content: flex-end; gap: 10px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
-        /* Table */
-        .table-container { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #2c3e50; color: white; padding: 12px; text-align: left; font-size: 13px; }
-        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
-        tr:hover { background: #f9f9f9; }
+        /* ===== CHART ===== */
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 24px; }
+        .chart-card { background: white; border-radius: var(--radius-lg); padding: 22px; box-shadow: var(--shadow); }
+        .chart-card .chart-title { font-size: 14px; font-weight: 700; color: var(--gray-800); margin-bottom: 4px; }
+        .chart-card .chart-sub { font-size: 12px; color: var(--gray-400); margin-bottom: 18px; }
 
-        /* Alert */
-        .alert {
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            font-size: 13px;
+        /* ===== TOAST ===== */
+        .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            padding: 14px 20px; border-radius: 10px; font-size: 13px; font-weight: 500;
+            box-shadow: var(--shadow-lg); animation: toastIn 0.3s ease;
+            display: flex; align-items: center; gap: 10px; min-width: 280px;
         }
-        .alert-success { background: #d5f5e3; color: #1e8449; }
-        .alert-error { background: #fadbd8; color: #922b21; }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: translateX(0); } }
+        .toast.success { background: var(--success); color: white; }
+        .toast.error { background: var(--danger); color: white; }
+        .toast.info { background: var(--primary); color: white; }
 
-        /* Loading */
-        .loading { text-align: center; padding: 40px; color: #999; }
+        /* ===== ALERT ===== */
+        .alert { padding: 11px 15px; border-radius: 9px; margin-bottom: 16px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+        .alert-error { background: var(--danger-light); color: #991b1b; border: 1px solid #fecaca; }
+        .alert-success { background: var(--success-light); color: #166534; border: 1px solid #bbf7d0; }
+
+        /* ===== EMPTY ===== */
+        .empty-state { padding: 60px 20px; text-align: center; }
+        .empty-state .empty-icon { font-size: 52px; margin-bottom: 14px; opacity: 0.5; }
+        .empty-state h3 { font-size: 16px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; }
+        .empty-state p { font-size: 13px; color: var(--gray-400); }
+
+        /* ===== PROFILE ===== */
+        .profile-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        .profile-card { background: white; border-radius: var(--radius-lg); padding: 28px; box-shadow: var(--shadow); text-align: center; }
+        .profile-avatar-lg {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 30px; font-weight: 700; margin: 0 auto 16px;
+        }
+        .profile-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+        .profile-email { font-size: 13px; color: var(--gray-400); margin-bottom: 12px; }
+        .profile-info-card { background: white; border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow); }
+        .info-row { display: flex; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--gray-100); }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { width: 140px; font-size: 12px; font-weight: 600; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-value { font-size: 14px; color: var(--gray-800); font-weight: 500; }
+
+        .loading-spinner { text-align: center; padding: 48px; color: var(--gray-400); font-size: 14px; }
+        .loading-spinner::before { content: '⏳'; font-size: 28px; display: block; margin-bottom: 10px; }
+
+        @media (max-width: 900px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .chart-grid { grid-template-columns: 1fr; }
+            .auth-left { display: none; }
+            .auth-right { width: 100%; }
+            .profile-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
-<!-- Navbar -->
-<nav class="navbar">
-    <h1>📚 Library Management</h1>
-    <div class="nav-links" id="navLinks">
-        <a onclick="showPage('loginPage')">Login</a>
-        <a onclick="showPage('registerPage')">Register</a>
-    </div>
-</nav>
+<div class="toast-container" id="toastContainer"></div>
 
-<!-- LOGIN PAGE -->
-<div id="loginPage" class="page active">
-    <div class="auth-container">
-        <h2>Sistemə Giriş</h2>
-        <div id="loginAlert"></div>
-        <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="loginEmail" placeholder="email@example.com" value="ali@library.com">
+<!-- ===== AUTH ===== -->
+<div id="authWrapper" class="auth-wrapper">
+    <div class="auth-left">
+        <div class="big-icon">📚</div>
+        <h1>Kitabxana İdarəetmə Sistemi</h1>
+        <p>Kitablarınızı, üzvlərinizi və borc qeydlərini asan şəkildə idarə edin.</p>
+        <div class="auth-features">
+            <div class="auth-feature">
+                <div class="feat-icon">🔐</div>
+                <span>Rol əsaslı giriş sistemi (Admin, Kitabxanaçı, Üzv)</span>
+            </div>
+            <div class="auth-feature">
+                <div class="feat-icon">📖</div>
+                <span>Kitab götürmə və qaytarma idarəetməsi</span>
+            </div>
+            <div class="auth-feature">
+                <div class="feat-icon">📊</div>
+                <span>Real vaxt statistika və hesabatlar</span>
+            </div>
+            <div class="auth-feature">
+                <div class="feat-icon">🔍</div>
+                <span>Sürətli kitab axtarış sistemi</span>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Şifrə</label>
-            <input type="password" id="loginPassword" placeholder="Şifrənizi daxil edin" value="123456">
+    </div>
+    <div class="auth-right">
+        <!-- LOGIN -->
+        <div id="loginCard" class="auth-card">
+            <div class="auth-header">
+                <h2>Xoş gəlmisiniz! 👋</h2>
+                <p>Davam etmək üçün hesabınıza daxil olun</p>
+            </div>
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="showAuth('login')">Daxil ol</div>
+                <div class="auth-tab" onclick="showAuth('register')">Qeydiyyat</div>
+            </div>
+            <div id="loginAlert"></div>
+            <div class="form-group">
+                <label>Email ünvanı</label>
+                <div class="input-wrap">
+                    <span class="input-icon">✉️</span>
+                    <input type="email" id="loginEmail" placeholder="email@nümunə.com" value="ali@library.com">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Şifrə</label>
+                <div class="input-wrap">
+                    <span class="input-icon">🔒</span>
+                    <input type="password" id="loginPassword" placeholder="••••••••" value="123456">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="login()">🚀 Daxil ol</button>
+            <div class="auth-toggle">Hesabınız yoxdur? <span onclick="showAuth('register')">Qeydiyyatdan keçin</span></div>
         </div>
-        <button class="btn btn-primary" onclick="login()">Daxil ol</button>
-        <div class="auth-toggle">
-            Hesabın yoxdur? <span onclick="showPage('registerPage')">Qeydiyyat</span>
+
+        <!-- REGISTER -->
+        <div id="registerCard" class="auth-card" style="display:none">
+            <div class="auth-header">
+                <h2>Yeni Hesab Yarat</h2>
+                <p>Kitabxana sisteminə qoşulun</p>
+            </div>
+            <div class="auth-tabs">
+                <div class="auth-tab" onclick="showAuth('login')">Daxil ol</div>
+                <div class="auth-tab active" onclick="showAuth('register')">Qeydiyyat</div>
+            </div>
+            <div id="registerAlert"></div>
+            <div class="form-group">
+                <label>Ad Soyad</label>
+                <div class="input-wrap">
+                    <span class="input-icon">👤</span>
+                    <input type="text" id="regName" placeholder="Adınız Soyadınız">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Email ünvanı</label>
+                <div class="input-wrap">
+                    <span class="input-icon">✉️</span>
+                    <input type="email" id="regEmail" placeholder="email@nümunə.com">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Şifrə</label>
+                <div class="input-wrap">
+                    <span class="input-icon">🔒</span>
+                    <input type="password" id="regPassword" placeholder="Minimum 6 simvol">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Rol</label>
+                <select id="regRole" class="no-icon" style="padding-left:14px">
+                    <option value="MEMBER">👤 Üzv</option>
+                    <option value="LIBRARIAN">📚 Kitabxanaçı</option>
+                    <option value="ADMIN">⚙️ Admin</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="register()">✅ Qeydiyyatdan keç</button>
+            <div class="auth-toggle">Hesabınız var? <span onclick="showAuth('login')">Daxil olun</span></div>
         </div>
     </div>
 </div>
 
-<!-- REGISTER PAGE -->
-<div id="registerPage" class="page">
-    <div class="auth-container">
-        <h2>Qeydiyyat</h2>
-        <div id="registerAlert"></div>
-        <div class="form-group">
-            <label>Ad Soyad</label>
-            <input type="text" id="regName" placeholder="Ad Soyadınız">
+<!-- ===== APP ===== -->
+<div id="appWrapper" style="display:none">
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-top">
+                <div class="logo-icon">📚</div>
+                <div class="logo-text">
+                    <h1>Kitabxana</h1>
+                    <span>İdarəetmə Sistemi</span>
+                </div>
+            </div>
+            <div class="logo-subtitle">Bakı Şəhər Kitabxanası • v1.0</div>
         </div>
-        <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="regEmail" placeholder="email@example.com">
+        <nav class="sidebar-nav" id="sidebarNav"></nav>
+        <div class="sidebar-footer">
+            <div class="user-avatar" id="sidebarAvatar">A</div>
+            <div class="user-details">
+                <div class="name" id="sidebarName"></div>
+                <div class="role-badge" id="sidebarRole"></div>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Şifrə</label>
-            <input type="password" id="regPassword" placeholder="Minimum 6 simvol">
-        </div>
-        <div class="form-group">
-            <label>Rol</label>
-            <select id="regRole">
-                <option value="MEMBER">Member</option>
-                <option value="LIBRARIAN">Librarian</option>
-                <option value="ADMIN">Admin</option>
-            </select>
-        </div>
-        <button class="btn btn-primary" onclick="register()">Qeydiyyatdan keç</button>
-        <div class="auth-toggle">
-            Hesabın var? <span onclick="showPage('loginPage')">Daxil ol</span>
-        </div>
-    </div>
-</div>
+    </aside>
 
-<!-- BOOKS PAGE -->
-<div id="booksPage" class="page">
-    <div class="page-header">
-        <h2>📚 Kitablar</h2>
-        <button class="btn btn-success" onclick="openAddBookModal()" id="addBookBtn" style="display:none">+ Kitab əlavə et</button>
-    </div>
-    <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Kitab axtar (ad, müəllif, ISBN)..." oninput="searchBooks()">
-    </div>
-    <div id="booksList" class="cards-grid">
-        <div class="loading">Kitablar yüklənir...</div>
-    </div>
-</div>
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-left">
+                <div class="breadcrumb">
+                    <span class="home">📚 Kitabxana</span>
+                    <span class="sep">›</span>
+                    <span class="current" id="topbarTitle">İdarə Paneli</span>
+                </div>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-date" id="topbarDate"></div>
+                <button class="logout-btn" onclick="logout()">🚪 Çıxış</button>
+            </div>
+        </div>
 
-<!-- BORROW PAGE -->
-<div id="borrowPage" class="page">
-    <div class="page-header">
-        <h2>📖 Borrow Qeydləri</h2>
-    </div>
-    <div id="borrowList" class="table-container">
-        <div class="loading">Yüklənir...</div>
-    </div>
-</div>
+        <div class="content">
+            <!-- DASHBOARD -->
+            <div id="dashboardPage" class="page active">
+                <div class="page-header">
+                    <div>
+                        <div class="page-title">İdarə Paneli</div>
+                        <div class="page-subtitle">Kitabxana fəaliyyətinə ümumi baxış</div>
+                    </div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card blue">
+                        <div class="stat-icon-wrap blue">📚</div>
+                        <div class="stat-info"><div class="number" id="statBooks">-</div><div class="label">Ümumi Kitab</div></div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-icon-wrap green">✅</div>
+                        <div class="stat-info"><div class="number" id="statAvail">-</div><div class="label">Mövcud Kitab</div></div>
+                    </div>
+                    <div class="stat-card yellow">
+                        <div class="stat-icon-wrap yellow">📖</div>
+                        <div class="stat-info"><div class="number" id="statBorrowed">-</div><div class="label">Aktiv Borc</div></div>
+                    </div>
+                    <div class="stat-card red">
+                        <div class="stat-icon-wrap red">⚠️</div>
+                        <div class="stat-info"><div class="number" id="statOverdue">-</div><div class="label">Gecikmiş</div></div>
+                    </div>
+                </div>
+                <div class="chart-grid">
+                    <div class="chart-card">
+                        <div class="chart-title">Borc Vəziyyəti</div>
+                        <div class="chart-sub">Cari borc qeydlərinin statusu</div>
+                        <canvas id="borrowChart" height="220"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">Ən Çox Götürülən Kitablar</div>
+                        <div class="chart-sub">Bu ay üzrə statistika</div>
+                        <canvas id="booksChart" height="220"></canvas>
+                    </div>
+                </div>
+                <div class="table-card">
+                    <div class="table-head-bar">
+                        <div>
+                            <h3>Son Borc Qeydləri</h3>
+                            <div class="count">Ən son 5 əməliyyat</div>
+                        </div>
+                    </div>
+                    <div id="recentBorrows"></div>
+                </div>
+            </div>
 
-<!-- ADMIN PAGE -->
-<div id="adminPage" class="page">
-    <div class="page-header">
-        <h2>👤 Admin Panel</h2>
-    </div>
-    <div class="stats-grid" id="statsGrid">
-        <div class="stat-card"><div class="number" id="totalBooks">-</div><div class="label">Ümumi Kitab</div></div>
-        <div class="stat-card"><div class="number" id="totalBorrows">-</div><div class="label">Aktiv Borrow</div></div>
-        <div class="stat-card"><div class="number" id="overdueBorrows">-</div><div class="label">Gecikmiş</div></div>
-    </div>
-    <h3 style="margin-bottom:15px; color:#2c3e50;">Bütün Borrow Qeydləri</h3>
-    <div id="adminBorrowList" class="table-container"></div>
+            <!-- BOOKS -->
+            <div id="booksPage" class="page">
+                <div class="page-header">
+                    <div>
+                        <div class="page-title">📚 Kitablar</div>
+                        <div class="page-subtitle">Kitabxanadakı bütün kitabların siyahısı</div>
+                    </div>
+                    <button class="btn btn-accent" onclick="openModal('addBookModal')" id="addBookBtn" style="display:none">
+                        ➕ Yeni Kitab
+                    </button>
+                </div>
+                <div class="books-toolbar">
+                    <div class="search-wrap">
+                        <span class="s-icon">🔍</span>
+                        <input type="text" id="searchInput" placeholder="Kitab adı, müəllif və ya ISBN ilə axtar..." oninput="searchBooks()">
+                    </div>
+                </div>
+                <div id="booksList" class="books-grid">
+                    <div class="loading-spinner"></div>
+                </div>
+            </div>
+
+            <!-- BORROW -->
+            <div id="borrowPage" class="page">
+                <div class="page-header">
+                    <div>
+                        <div class="page-title">📖 Borc Qeydləri</div>
+                        <div class="page-subtitle" id="borrowSubtitle">Bütün borc əməliyyatları</div>
+                    </div>
+                </div>
+                <div class="table-card">
+                    <div id="borrowList"><div class="loading-spinner"></div></div>
+                </div>
+            </div>
+
+            <!-- ADMIN -->
+            <div id="adminPage" class="page">
+                <div class="page-header">
+                    <div>
+                        <div class="page-title">⚙️ Admin Paneli</div>
+                        <div class="page-subtitle">Bütün borc əməliyyatlarını idarə edin</div>
+                    </div>
+                </div>
+                <div class="table-card">
+                    <div class="table-head-bar"><h3>Bütün Borc Qeydləri</h3></div>
+                    <div id="adminBorrowList"><div class="loading-spinner"></div></div>
+                </div>
+            </div>
+
+            <!-- PROFILE -->
+            <div id="profilePage" class="page">
+                <div class="page-header">
+                    <div>
+                        <div class="page-title">👤 Profil</div>
+                        <div class="page-subtitle">Hesab məlumatlarınız</div>
+                    </div>
+                </div>
+                <div class="profile-grid">
+                    <div class="profile-card">
+                        <div class="profile-avatar-lg" id="profileAvatar">A</div>
+                        <div class="profile-name" id="profileName"></div>
+                        <div class="profile-email" id="profileEmail"></div>
+                        <span class="badge" id="profileRoleBadge"></span>
+                    </div>
+                    <div class="profile-info-card">
+                        <div class="info-row">
+                            <div class="info-label">Ad Soyad</div>
+                            <div class="info-value" id="infoName"></div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Email</div>
+                            <div class="info-value" id="infoEmail"></div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Rol</div>
+                            <div class="info-value" id="infoRole"></div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Sistem</div>
+                            <div class="info-value">Kitabxana İdarəetmə Sistemi v1.0</div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">Hazırlandı</div>
+                            <div class="info-value">Ali Veysalov · Java Spring Boot</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 </div>
 
 <!-- ADD BOOK MODAL -->
 <div class="modal-overlay" id="addBookModal">
     <div class="modal">
-        <h3>Yeni Kitab Əlavə Et</h3>
-        <div id="addBookAlert"></div>
-        <div class="form-group">
-            <label>Kitab Adı *</label>
-            <input type="text" id="bookTitle" placeholder="Kitabın adı">
+        <div class="modal-header">
+            <h3>➕ Yeni Kitab Əlavə Et</h3>
+            <button class="close-btn" onclick="closeModal('addBookModal')">✕</button>
         </div>
-        <div class="form-group">
-            <label>Müəllif *</label>
-            <input type="text" id="bookAuthor" placeholder="Müəllif adı">
+        <div class="modal-body">
+            <div id="addBookAlert"></div>
+            <div class="form-row">
+                <div class="form-group" style="grid-column:1/-1">
+                    <label>Kitabın Adı *</label>
+                    <div class="input-wrap"><span class="input-icon">📗</span><input type="text" id="bookTitle" placeholder="Kitabın adını daxil edin"></div>
+                </div>
+                <div class="form-group" style="grid-column:1/-1">
+                    <label>Müəllif *</label>
+                    <div class="input-wrap"><span class="input-icon">✍️</span><input type="text" id="bookAuthor" placeholder="Müəllifin adı"></div>
+                </div>
+                <div class="form-group">
+                    <label>ISBN *</label>
+                    <div class="input-wrap"><span class="input-icon">🔖</span><input type="text" id="bookIsbn" placeholder="978-..."></div>
+                </div>
+                <div class="form-group">
+                    <label>Stok Sayı *</label>
+                    <div class="input-wrap"><span class="input-icon">📦</span><input type="number" id="bookStock" placeholder="5" min="1"></div>
+                </div>
+                <div class="form-group">
+                    <label>Nəşriyyat</label>
+                    <div class="input-wrap"><span class="input-icon">🏢</span><input type="text" id="bookPublisher" placeholder="Nəşriyyat adı"></div>
+                </div>
+                <div class="form-group">
+                    <label>Nəşr İli</label>
+                    <div class="input-wrap"><span class="input-icon">📅</span><input type="number" id="bookYear" placeholder="2024"></div>
+                </div>
+            </div>
         </div>
-        <div class="form-group">
-            <label>ISBN *</label>
-            <input type="text" id="bookIsbn" placeholder="978-...">
-        </div>
-        <div class="form-group">
-            <label>Nəşriyyat</label>
-            <input type="text" id="bookPublisher" placeholder="Nəşriyyat adı">
-        </div>
-        <div class="form-group">
-            <label>Nəşr ili</label>
-            <input type="number" id="bookYear" placeholder="2024">
-        </div>
-        <div class="form-group">
-            <label>Stok sayı *</label>
-            <input type="number" id="bookStock" placeholder="5" min="1">
-        </div>
-        <div class="modal-actions">
-            <button class="btn" onclick="closeModal('addBookModal')" style="background:#eee">Ləğv et</button>
-            <button class="btn btn-success" onclick="addBook()">Əlavə et</button>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('addBookModal')">Ləğv et</button>
+            <button class="btn btn-accent" onclick="addBook()">✅ Əlavə et</button>
         </div>
     </div>
 </div>
@@ -314,16 +707,24 @@
 <!-- BORROW MODAL -->
 <div class="modal-overlay" id="borrowModal">
     <div class="modal">
-        <h3>Kitab Götür</h3>
-        <div id="borrowAlert"></div>
-        <p id="borrowBookTitle" style="margin-bottom:15px; font-weight:bold; color:#2c3e50;"></p>
-        <div class="form-group">
-            <label>Son qaytarma tarixi *</label>
-            <input type="date" id="borrowDueDate">
+        <div class="modal-header">
+            <h3>📖 Kitab Götür</h3>
+            <button class="close-btn" onclick="closeModal('borrowModal')">✕</button>
         </div>
-        <div class="modal-actions">
-            <button class="btn" onclick="closeModal('borrowModal')" style="background:#eee">Ləğv et</button>
-            <button class="btn btn-primary" onclick="confirmBorrow()">Götür</button>
+        <div class="modal-body">
+            <div id="borrowAlert"></div>
+            <div style="background:var(--primary-lighter); border-radius:10px; padding:16px; margin-bottom:20px; border-left:4px solid var(--primary-light);">
+                <div style="font-size:11px; color:var(--primary-light); font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Seçilmiş Kitab</div>
+                <div style="font-size:15px; font-weight:700; color:var(--primary);" id="borrowBookTitle"></div>
+            </div>
+            <div class="form-group">
+                <label>Son Qaytarma Tarixi *</label>
+                <div class="input-wrap"><span class="input-icon">📅</span><input type="date" id="borrowDueDate"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" onclick="closeModal('borrowModal')">Ləğv et</button>
+            <button class="btn btn-primary" style="width:auto" onclick="confirmBorrow()">📖 Götür</button>
         </div>
     </div>
 </div>
@@ -333,47 +734,46 @@ const API = 'http://localhost:8080/api';
 let token = localStorage.getItem('token');
 let userRole = localStorage.getItem('role');
 let userName = localStorage.getItem('userName');
+let userEmail = localStorage.getItem('userEmail');
 let selectedBookId = null;
+let borrowChart = null, booksChart = null;
+const cols = ['col1','col2','col3','col4','col5'];
+const emojis = ['📗','📘','📕','📙','📓'];
 
-function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById(pageId).classList.add('active');
-    if (pageId === 'booksPage') loadBooks();
-    if (pageId === 'borrowPage') loadMyBorrows();
-    if (pageId === 'adminPage') loadAdminData();
+function showAuth(type) {
+    document.getElementById('loginCard').style.display = type === 'login' ? 'block' : 'none';
+    document.getElementById('registerCard').style.display = type === 'register' ? 'block' : 'none';
 }
 
-function showAlert(elId, msg, type) {
-    const el = document.getElementById(elId);
-    el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
-    setTimeout(() => el.innerHTML = '', 3000);
+function showAlert(id, msg, type) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = `<div class="alert alert-${type}">⚠️ ${msg}</div>`;
+    setTimeout(() => { if(el) el.innerHTML = ''; }, 4000);
+}
+
+function toast(msg, type = 'success') {
+    const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.innerHTML = `<span>${icons[type]}</span> ${msg}`;
+    document.getElementById('toastContainer').appendChild(t);
+    setTimeout(() => t.remove(), 3500);
 }
 
 async function login() {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
+    if (!email || !password) { showAlert('loginAlert', 'Email və şifrəni daxil edin', 'error'); return; }
     try {
         const res = await fetch(`${API}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
         const data = await res.json();
-        if (res.ok) {
-            token = data.accessToken;
-            userRole = data.role;
-            userName = data.fullName;
-            localStorage.setItem('token', token);
-            localStorage.setItem('role', userRole);
-            localStorage.setItem('userName', userName);
-            updateNavbar();
-            showPage('booksPage');
-        } else {
-            showAlert('loginAlert', data.message || 'Xəta baş verdi', 'error');
-        }
-    } catch(e) {
-        showAlert('loginAlert', 'Server ilə əlaqə yoxdur', 'error');
-    }
+        if (res.ok) { saveUser(data); initApp(); }
+        else showAlert('loginAlert', data.message || 'Email və ya şifrə yanlışdır', 'error');
+    } catch(e) { showAlert('loginAlert', 'Server ilə əlaqə yoxdur. Backend işləyirmi?', 'error'); }
 }
 
 async function register() {
@@ -381,94 +781,146 @@ async function register() {
     const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPassword').value;
     const role = document.getElementById('regRole').value;
+    if (!fullName || !email || !password) { showAlert('registerAlert', 'Bütün sahələri doldurun', 'error'); return; }
     try {
         const res = await fetch(`${API}/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fullName, email, password, role })
         });
         const data = await res.json();
-        if (res.ok) {
-            token = data.accessToken;
-            userRole = data.role;
-            userName = data.fullName;
-            localStorage.setItem('token', token);
-            localStorage.setItem('role', userRole);
-            localStorage.setItem('userName', userName);
-            updateNavbar();
-            showPage('booksPage');
-        } else {
-            showAlert('registerAlert', data.message || 'Xəta baş verdi', 'error');
-        }
-    } catch(e) {
-        showAlert('registerAlert', 'Server ilə əlaqə yoxdur', 'error');
-    }
+        if (res.ok) { saveUser(data); initApp(); }
+        else showAlert('registerAlert', data.message || 'Xəta baş verdi', 'error');
+    } catch(e) { showAlert('registerAlert', 'Server ilə əlaqə yoxdur', 'error'); }
+}
+
+function saveUser(data) {
+    token = data.accessToken; userRole = data.role;
+    userName = data.fullName; userEmail = data.email;
+    localStorage.setItem('token', token);
+    localStorage.setItem('role', userRole);
+    localStorage.setItem('userName', userName);
+    localStorage.setItem('userEmail', userEmail);
 }
 
 function logout() {
-    token = null; userRole = null; userName = null;
-    localStorage.clear();
-    updateNavbar();
-    showPage('loginPage');
+    localStorage.clear(); token = null; userRole = null; userName = null;
+    document.getElementById('authWrapper').style.display = 'flex';
+    document.getElementById('appWrapper').style.display = 'none';
+    showAuth('login');
 }
 
-function updateNavbar() {
-    const nav = document.getElementById('navLinks');
-    if (token) {
-        let links = `<span class="user-info">Salam, ${userName} (${userRole})</span>`;
-        links += `<a onclick="showPage('booksPage')">Kitablar</a>`;
-        if (userRole === 'MEMBER') links += `<a onclick="showPage('borrowPage')">Borrow tarixçəm</a>`;
-        if (userRole === 'ADMIN' || userRole === 'LIBRARIAN') links += `<a onclick="showPage('borrowPage')">Borrow</a>`;
-        if (userRole === 'ADMIN') links += `<a onclick="showPage('adminPage')">Admin</a>`;
-        links += `<a onclick="logout()" style="color:#e74c3c">Çıxış</a>`;
-        nav.innerHTML = links;
-        if (userRole === 'ADMIN' || userRole === 'LIBRARIAN') {
-            document.getElementById('addBookBtn').style.display = 'block';
-        }
+function initApp() {
+    document.getElementById('authWrapper').style.display = 'none';
+    document.getElementById('appWrapper').style.display = 'block';
+    const now = new Date();
+    document.getElementById('topbarDate').textContent = now.toLocaleDateString('az-AZ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    updateSidebar();
+    if (userRole === 'ADMIN' || userRole === 'LIBRARIAN') {
+        document.getElementById('addBookBtn').style.display = 'flex';
+        showPage('dashboardPage', 'İdarə Paneli');
     } else {
-        nav.innerHTML = `<a onclick="showPage('loginPage')">Login</a><a onclick="showPage('registerPage')">Register</a>`;
+        showPage('booksPage', 'Kitablar');
     }
 }
 
-async function loadBooks(keyword = '') {
-    const url = keyword ? `${API}/books/search?keyword=${keyword}` : `${API}/books`;
+function updateSidebar() {
+    const initials = userName ? userName.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase() : 'U';
+    document.getElementById('sidebarAvatar').textContent = initials;
+    document.getElementById('sidebarName').textContent = userName;
+    document.getElementById('sidebarRole').textContent = userRole === 'ADMIN' ? 'Admin' : userRole === 'LIBRARIAN' ? 'Kitabxanaçı' : 'Üzv';
+    document.getElementById('profileAvatar').textContent = initials;
+    document.getElementById('profileName').textContent = userName;
+    document.getElementById('profileEmail').textContent = userEmail;
+    document.getElementById('infoName').textContent = userName;
+    document.getElementById('infoEmail').textContent = userEmail;
+    document.getElementById('infoRole').textContent = userRole === 'ADMIN' ? 'Admin' : userRole === 'LIBRARIAN' ? 'Kitabxanaçı' : 'Üzv';
+    const rb = document.getElementById('profileRoleBadge');
+    rb.textContent = userRole; rb.className = `badge badge-${userRole.toLowerCase()}`;
+
+    let html = '';
+    if (userRole === 'ADMIN' || userRole === 'LIBRARIAN') {
+        html += `<div class="nav-group-label">Əsas</div>`;
+        html += navI('dashboardPage','📊','İdarə Paneli');
+    } else {
+        html += `<div class="nav-group-label">Əsas</div>`;
+    }
+    html += navI('booksPage','📚','Kitablar');
+    html += navI('borrowPage','📖', userRole === 'MEMBER' ? 'Borc Tarixçəm' : 'Borc Qeydləri');
+    if (userRole === 'ADMIN') {
+        html += `<div class="nav-group-label">İdarəetmə</div>`;
+        html += navI('adminPage','⚙️','Admin Paneli');
+    }
+    html += `<div class="nav-group-label">Hesab</div>`;
+    html += navI('profilePage','👤','Profilim');
+    document.getElementById('sidebarNav').innerHTML = html;
+}
+
+function navI(page, icon, label) {
+    return `<div class="nav-item" onclick="showPage('${page}','${label}')" id="nav-${page}">
+        <span class="nav-icon">${icon}</span><span>${label}</span>
+    </div>`;
+}
+
+function showPage(pageId, title) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    const nav = document.getElementById('nav-' + pageId);
+    if (nav) nav.classList.add('active');
+    if (title) document.getElementById('topbarTitle').textContent = title;
+    if (pageId === 'booksPage') loadBooks();
+    if (pageId === 'borrowPage') loadBorrows();
+    if (pageId === 'dashboardPage') loadDashboard();
+    if (pageId === 'adminPage') loadAdminBorrows();
+}
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+async function loadBooks(kw = '') {
+    const url = kw ? `${API}/books/search?keyword=${kw}` : `${API}/books`;
+    const c = document.getElementById('booksList');
+    c.innerHTML = '<div class="loading-spinner"></div>';
     try {
         const res = await fetch(url);
         const data = await res.json();
         const books = data.content || [];
-        const container = document.getElementById('booksList');
-        if (books.length === 0) {
-            container.innerHTML = '<div class="loading">Kitab tapılmadı</div>';
+        if (!books.length) {
+            c.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><h3>Kitab tapılmadı</h3><p>Axtarış kriteriyalarını dəyişin</p></div>`;
             return;
         }
-        container.innerHTML = books.map(book => `
-            <div class="card">
-                <h3>${book.title}</h3>
-                <p>✍️ ${book.author}</p>
-                <p>📖 ISBN: ${book.isbn}</p>
-                ${book.publisher ? `<p>🏢 ${book.publisher} (${book.publishYear || ''})</p>` : ''}
-                <p>
-                    <span class="badge ${book.availableStock > 0 ? 'badge-success' : 'badge-danger'}">
-                        ${book.availableStock > 0 ? `Mövcud: ${book.availableStock}` : 'Stokda yoxdur'}
-                    </span>
-                    <span class="badge badge-warning" style="margin-left:5px">Ümumi: ${book.totalStock}</span>
-                </p>
-                <div class="card-actions">
-                    ${token && userRole === 'MEMBER' && book.availableStock > 0 ?
-                        `<button class="btn btn-primary" onclick="openBorrowModal(${book.id}, '${book.title}')">Götür</button>` : ''}
-                    ${token && (userRole === 'ADMIN' || userRole === 'LIBRARIAN') ?
-                        `<button class="btn btn-danger" onclick="deleteBook(${book.id})">Sil</button>` : ''}
+        c.innerHTML = books.map((b, i) => `
+            <div class="book-card">
+                <div class="book-cover-area ${cols[i%5]}">
+                    ${emojis[i%5]}
+                    <div class="stock-overlay">${b.availableStock}/${b.totalStock}</div>
                 </div>
-            </div>
-        `).join('');
+                <div class="book-body">
+                    <h3>${b.title}</h3>
+                    <div class="author">✍️ ${b.author}</div>
+                    <div class="isbn">🔖 ${b.isbn}</div>
+                    ${b.publisher ? `<div class="author" style="margin-top:3px">🏢 ${b.publisher} ${b.publishYear?'('+b.publishYear+')':''}</div>` : ''}
+                </div>
+                <div class="book-footer-bar">
+                    <span class="avail-badge ${b.availableStock>0?'avail-ok':'avail-no'}">
+                        ${b.availableStock>0 ? '✓ Mövcuddur' : '✗ Mövcud deyil'}
+                    </span>
+                    <div style="display:flex;gap:6px">
+                        ${token && userRole==='MEMBER' && b.availableStock>0 ?
+                            `<button class="btn btn-primary btn-sm" onclick="openBorrowModal(${b.id},'${b.title.replace(/'/g,"\\'")}')">Götür</button>` : ''}
+                        ${token && (userRole==='ADMIN'||userRole==='LIBRARIAN') ?
+                            `<button class="btn btn-danger btn-sm" onclick="deleteBook(${b.id})">Sil</button>` : ''}
+                    </div>
+                </div>
+            </div>`).join('');
     } catch(e) {
-        document.getElementById('booksList').innerHTML = '<div class="loading">Server ilə əlaqə yoxdur</div>';
+        c.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Xəta baş verdi</h3><p>Server ilə əlaqə yoxdur</p></div>`;
     }
 }
 
 function searchBooks() {
-    const keyword = document.getElementById('searchInput').value;
-    if (keyword.length >= 2 || keyword.length === 0) loadBooks(keyword);
+    const k = document.getElementById('searchInput').value;
+    if (k.length >= 2 || k.length === 0) loadBooks(k);
 }
 
 async function addBook() {
@@ -480,6 +932,9 @@ async function addBook() {
         publishYear: parseInt(document.getElementById('bookYear').value) || null,
         totalStock: parseInt(document.getElementById('bookStock').value)
     };
+    if (!body.title || !body.author || !body.isbn || !body.totalStock) {
+        showAlert('addBookAlert', 'Zəruri sahələri doldurun (*)', 'error'); return;
+    }
     try {
         const res = await fetch(`${API}/books`, {
             method: 'POST',
@@ -488,161 +943,161 @@ async function addBook() {
         });
         if (res.ok) {
             closeModal('addBookModal');
+            ['bookTitle','bookAuthor','bookIsbn','bookPublisher','bookYear','bookStock'].forEach(id => document.getElementById(id).value = '');
             loadBooks();
+            toast('Kitab uğurla əlavə edildi!');
         } else {
-            const data = await res.json();
-            showAlert('addBookAlert', data.message || 'Xəta baş verdi', 'error');
+            const d = await res.json();
+            showAlert('addBookAlert', d.message || 'Xəta baş verdi', 'error');
         }
-    } catch(e) {
-        showAlert('addBookAlert', 'Server xətası', 'error');
-    }
+    } catch(e) { showAlert('addBookAlert', 'Server xətası', 'error'); }
 }
 
 async function deleteBook(id) {
-    if (!confirm('Bu kitabı silmək istəyirsiniz?')) return;
-    await fetch(`${API}/books/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    loadBooks();
-}
-
-function openAddBookModal() {
-    document.getElementById('addBookModal').classList.add('active');
+    if (!confirm('Bu kitabı silmək istədiyinizdən əminsiniz?')) return;
+    await fetch(`${API}/books/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+    loadBooks(); toast('Kitab silindi', 'error');
 }
 
 function openBorrowModal(bookId, bookTitle) {
     selectedBookId = bookId;
-    document.getElementById('borrowBookTitle').textContent = `Kitab: ${bookTitle}`;
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 14);
-    document.getElementById('borrowDueDate').value = tomorrow.toISOString().split('T')[0];
-    document.getElementById('borrowModal').classList.add('active');
-}
-
-function closeModal(id) {
-    document.getElementById(id).classList.remove('active');
+    document.getElementById('borrowBookTitle').textContent = bookTitle;
+    const d = new Date(); d.setDate(d.getDate() + 14);
+    document.getElementById('borrowDueDate').value = d.toISOString().split('T')[0];
+    openModal('borrowModal');
 }
 
 async function confirmBorrow() {
     const dueDate = document.getElementById('borrowDueDate').value;
+    if (!dueDate) { showAlert('borrowAlert', 'Son tarix seçin', 'error'); return; }
     try {
         const res = await fetch(`${API}/borrow`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ bookId: selectedBookId, dueDate })
         });
-        if (res.ok) {
-            closeModal('borrowModal');
-            loadBooks();
-            alert('Kitab uğurla götürüldü!');
-        } else {
-            const data = await res.json();
-            showAlert('borrowAlert', data.message || 'Xəta', 'error');
-        }
-    } catch(e) {
-        showAlert('borrowAlert', 'Server xətası', 'error');
-    }
+        if (res.ok) { closeModal('borrowModal'); loadBooks(); toast('Kitab uğurla götürüldü! 📖'); }
+        else { const d = await res.json(); showAlert('borrowAlert', d.message || 'Xəta', 'error'); }
+    } catch(e) { showAlert('borrowAlert', 'Server xətası', 'error'); }
 }
 
-async function loadMyBorrows() {
-    const url = (userRole === 'ADMIN' || userRole === 'LIBRARIAN') ? `${API}/borrow/all` : `${API}/borrow/my-history`;
+async function loadBorrows() {
+    const isAdmin = userRole === 'ADMIN' || userRole === 'LIBRARIAN';
+    const url = isAdmin ? `${API}/borrow/all` : `${API}/borrow/my-history`;
+    const c = document.getElementById('borrowList');
+    c.innerHTML = '<div class="loading-spinner"></div>';
     try {
         const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await res.json();
         const borrows = data.content || [];
-        const container = document.getElementById('borrowList');
-        if (borrows.length === 0) {
-            container.innerHTML = '<div class="loading">Borrow qeydi yoxdur</div>';
+        if (!borrows.length) {
+            c.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><h3>Borc qeydi yoxdur</h3><p>Hələlik heç bir borc əməliyyatı yoxdur</p></div>`;
             return;
         }
-        container.innerHTML = `
-            <table>
-                <thead>
-                    <tr>
-                        <th>Kitab</th>
-                        <th>İstifadəçi</th>
-                        <th>Götürülmə tarixi</th>
-                        <th>Son tarix</th>
-                        <th>Status</th>
-                        ${userRole !== 'MEMBER' ? '<th>Əməliyyat</th>' : ''}
-                    </tr>
-                </thead>
-                <tbody>
-                    ${borrows.map(b => `
-                        <tr>
-                            <td>${b.bookTitle}</td>
-                            <td>${b.userFullName}</td>
-                            <td>${b.borrowDate ? b.borrowDate.split('T')[0] : '-'}</td>
-                            <td>${b.dueDate}</td>
-                            <td>
-                                <span class="badge ${b.status === 'BORROWED' ? 'badge-warning' : b.status === 'RETURNED' ? 'badge-success' : 'badge-danger'}">
-                                    ${b.status}
-                                </span>
-                            </td>
-                            ${userRole !== 'MEMBER' ? `
-                                <td>
-                                    ${b.status === 'BORROWED' ?
-                                        `<button class="btn btn-success" onclick="returnBook(${b.id})">Qaytar</button>` :
-                                        '-'}
-                                </td>
-                            ` : ''}
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>`;
+        c.innerHTML = `<table><thead><tr>
+            <th>Kitab</th><th>Üzv</th><th>Götürmə Tarixi</th><th>Son Tarix</th><th>Status</th>
+            ${isAdmin ? '<th>Əməliyyat</th>' : ''}
+        </tr></thead><tbody>
+        ${borrows.map(b => `<tr>
+            <td><div class="book-name">${b.bookTitle}</div></td>
+            <td><div class="user-name">${b.userFullName}</div></td>
+            <td>${b.borrowDate ? b.borrowDate.split('T')[0] : '-'}</td>
+            <td>${b.dueDate}</td>
+            <td><span class="badge badge-${b.status==='BORROWED'?'borrowed':b.status==='RETURNED'?'returned':'overdue'}">
+                ${b.status==='BORROWED'?'📖 Borcda':b.status==='RETURNED'?'✅ Qaytarılıb':'⚠️ Gecikmiş'}
+            </span></td>
+            ${isAdmin ? `<td>${b.status==='BORROWED'?`<button class="btn btn-success btn-sm" onclick="returnBook(${b.id})">✅ Qaytar</button>`:'-'}</td>` : ''}
+        </tr>`).join('')}
+        </tbody></table>`;
     } catch(e) {
-        document.getElementById('borrowList').innerHTML = '<div class="loading">Server ilə əlaqə yoxdur</div>';
+        c.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Xəta</h3><p>Server ilə əlaqə yoxdur</p></div>`;
     }
 }
 
 async function returnBook(borrowId) {
-    if (!confirm('Kitabı qaytarmaq istəyirsiniz?')) return;
-    await fetch(`${API}/borrow/return/${borrowId}`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
-    });
-    loadMyBorrows();
+    if (!confirm('Kitabı qaytarmaq istədiyinizdən əminsiniz?')) return;
+    await fetch(`${API}/borrow/return/${borrowId}`, { method: 'PUT', headers: { 'Authorization': `Bearer ${token}` } });
+    loadBorrows(); toast('Kitab uğurla qaytarıldı! ✅');
 }
 
-async function loadAdminData() {
+async function loadDashboard() {
     try {
-        const [booksRes, borrowsRes] = await Promise.all([
+        const [bR, brR] = await Promise.all([
             fetch(`${API}/books`),
             fetch(`${API}/borrow/all`, { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
-        const booksData = await booksRes.json();
-        const borrowsData = await borrowsRes.json();
-        document.getElementById('totalBooks').textContent = booksData.totalElements || 0;
-        const borrows = borrowsData.content || [];
+        const bD = await bR.json(); const brD = await brR.json();
+        const books = bD.content || []; const borrows = brD.content || [];
+        document.getElementById('statBooks').textContent = bD.totalElements || 0;
+        document.getElementById('statAvail').textContent = books.filter(b => b.availableStock > 0).length;
         const active = borrows.filter(b => b.status === 'BORROWED').length;
+        const returned = borrows.filter(b => b.status === 'RETURNED').length;
         const overdue = borrows.filter(b => b.status === 'OVERDUE').length;
-        document.getElementById('totalBorrows').textContent = active;
-        document.getElementById('overdueBorrows').textContent = overdue;
+        document.getElementById('statBorrowed').textContent = active;
+        document.getElementById('statOverdue').textContent = overdue;
 
-        document.getElementById('adminBorrowList').innerHTML = `
-            <table>
-                <thead>
-                    <tr><th>Kitab</th><th>İstifadəçi</th><th>Son tarix</th><th>Status</th><th>Əməliyyat</th></tr>
-                </thead>
-                <tbody>
-                    ${borrows.map(b => `
-                        <tr>
-                            <td>${b.bookTitle}</td>
-                            <td>${b.userFullName}</td>
-                            <td>${b.dueDate}</td>
-                            <td><span class="badge ${b.status === 'BORROWED' ? 'badge-warning' : b.status === 'RETURNED' ? 'badge-success' : 'badge-danger'}">${b.status}</span></td>
-                            <td>${b.status === 'BORROWED' ? `<button class="btn btn-success" onclick="returnBook(${b.id})">Qaytar</button>` : '-'}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>`;
+        if (borrowChart) borrowChart.destroy();
+        borrowChart = new Chart(document.getElementById('borrowChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Borcda', 'Qaytarılıb', 'Gecikmiş'],
+                datasets: [{ data: [active, returned, overdue], backgroundColor: ['#c8a84b','#16a34a','#dc2626'], borderWidth: 0, hoverOffset: 6 }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 16 } } } }
+        });
+
+        const bookCounts = {};
+        borrows.forEach(b => { bookCounts[b.bookTitle] = (bookCounts[b.bookTitle] || 0) + 1; });
+        const sorted = Object.entries(bookCounts).sort((a,b) => b[1]-a[1]).slice(0,5);
+        if (booksChart) booksChart.destroy();
+        booksChart = new Chart(document.getElementById('booksChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: sorted.map(s => s[0].length > 18 ? s[0].substring(0,18)+'...' : s[0]),
+                datasets: [{ label: 'Borc sayı', data: sorted.map(s => s[1]), backgroundColor: '#1a3c5e', borderRadius: 6, hoverBackgroundColor: '#2563a8' }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+
+        const recent = borrows.slice(0, 5);
+        document.getElementById('recentBorrows').innerHTML = !recent.length ?
+            `<div class="empty-state"><div class="empty-icon">📭</div><h3>Borc qeydi yoxdur</h3></div>` :
+            `<table><thead><tr><th>Kitab</th><th>Üzv</th><th>Tarix</th><th>Status</th></tr></thead>
+            <tbody>${recent.map(b => `<tr>
+                <td><div class="book-name">${b.bookTitle}</div></td>
+                <td>${b.userFullName}</td>
+                <td>${b.borrowDate ? b.borrowDate.split('T')[0] : '-'}</td>
+                <td><span class="badge badge-${b.status==='BORROWED'?'borrowed':b.status==='RETURNED'?'returned':'overdue'}">
+                    ${b.status==='BORROWED'?'📖 Borcda':b.status==='RETURNED'?'✅ Qaytarılıb':'⚠️ Gecikmiş'}
+                </span></td>
+            </tr>`).join('')}</tbody></table>`;
     } catch(e) {}
 }
 
-// Init
-updateNavbar();
-if (token) showPage('booksPage');
+async function loadAdminBorrows() {
+    const c = document.getElementById('adminBorrowList');
+    try {
+        const res = await fetch(`${API}/borrow/all`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const data = await res.json();
+        const borrows = data.content || [];
+        c.innerHTML = !borrows.length ?
+            `<div class="empty-state"><div class="empty-icon">📭</div><h3>Borc qeydi yoxdur</h3></div>` :
+            `<table><thead><tr><th>Kitab</th><th>Üzv</th><th>Son Tarix</th><th>Status</th><th>Əməliyyat</th></tr></thead>
+            <tbody>${borrows.map(b => `<tr>
+                <td><div class="book-name">${b.bookTitle}</div></td>
+                <td>${b.userFullName}</td><td>${b.dueDate}</td>
+                <td><span class="badge badge-${b.status==='BORROWED'?'borrowed':b.status==='RETURNED'?'returned':'overdue'}">
+                    ${b.status==='BORROWED'?'📖 Borcda':b.status==='RETURNED'?'✅ Qaytarılıb':'⚠️ Gecikmiş'}
+                </span></td>
+                <td>${b.status==='BORROWED'?`<button class="btn btn-success btn-sm" onclick="returnBook(${b.id})">✅ Qaytar</button>`:'-'}</td>
+            </tr>`).join('')}</tbody></table>`;
+    } catch(e) {}
+}
+
+if (token) { initApp(); } else {
+    document.getElementById('authWrapper').style.display = 'flex';
+    document.getElementById('appWrapper').style.display = 'none';
+}
 </script>
 </body>
 </html>
